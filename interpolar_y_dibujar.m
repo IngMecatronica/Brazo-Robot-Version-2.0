@@ -1,7 +1,7 @@
 function [nuevo_estado, efector_pos] = interpolar_y_dibujar(desde, hasta, pasos, L1, L2, L3, L4, L5, L6, limites, ax)
     % Offsets según tu configuración
     offset_g2 = -45;
-    offset_g4 = -35;
+    offset_g4 = -70;
     
     for i = 1:pasos
         paso = desde + (hasta - desde) * i / pasos;

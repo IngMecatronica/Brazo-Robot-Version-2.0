@@ -3,9 +3,9 @@ function main_interface()
     L1 = 62; L2 = 45; L3 = 39;
     L4 = 150; L5 = 140; L6 = 61;
     phi_default = 0.0;
-    POS_INICIAL = [90 180 145 35];
-    POS_FINAL = [0 180 145 0];
-    limites = [0 180; -45 180; 0 180; -35 180];
+    POS_INICIAL = [90 180 135 35];
+    POS_FINAL = [0 135 135 -35];
+    limites = [0 180; -45 180; 0 180; -45 200];
 
     estado_actual = POS_INICIAL;
     pasos_interp = 30;
@@ -161,16 +161,28 @@ function main_interface()
     end
 
     function onSalir()
+        ejecutando = true;
+        detenido = false;
+
+        % Mover tanto en simulación como en físico
+        for i = 1:4
+            sliders(i).Value = POS_FINAL(i);
+            edits(i).Value = POS_FINAL(i);
+        end
+
+        actualizar_robot();  % Esto manda los datos al Arduino
+
+        pause(0.5);  % Espera para que el Arduino reciba y ejecute
+
+        % Ahora sí, cerrar la conexión con Arduino
         if ~isempty(puertoSerial) && isvalid(puertoSerial)
             delete(puertoSerial);
             mostrar_comando("Arduino desconectado al cerrar la interfaz.");
         end
-        ejecutando = true;
-        detenido = false;
-        dibujar_estado(POS_FINAL);
-        pause(0.5);
+
         close(fig);
     end
+
 
     % ------------------------- COMUNICACIÓN ARDUINO Y ELECTROIMÁN -------------------------
     uilabel(fig, 'Text', 'Comunicación Arduino', 'FontWeight','bold', 'Position', [30 580 200 22]);
@@ -204,7 +216,7 @@ function main_interface()
 
     function conectarArduino()
         try
-            puertoSerial = serialport("COM4", 115200); % Cambia el puerto si es necesario
+            puertoSerial = serialport("COM3", 115200); % Cambia el puerto si es necesario
             pause(2);
             arduinoActivo = true;
             pausaComunicacion = false;
@@ -246,17 +258,22 @@ function main_interface()
             dibujar_estado(valores_con_offset);  % Enviar valores con offset a la simulación
 
             % Enviar a Arduino (sin offset extra)
+            % Enviar a Arduino (con offset aplicado)
             if arduinoActivo && ~pausaComunicacion && isvalid(puertoSerial)
                 try
-                    valores_envio = valores; % aquí puedes ajustar offsets físicos si tu hardware lo requiere
-                    valores_envio(3) = -valores_envio(3); % invertir g3 si lo requiere tu hardware
+                    valores_envio = valores;
+                    valores_envio(2) = valores_envio(2) + 45;  % Offset físico en g2
+                    valores_envio(4) = valores_envio(4) + 35    ;  % Offset físico en g4
+                    valores_envio(3) = valores_envio(3);      % Invertir g3 si lo requiere tu hardware
+
                     comando = sprintf('A%d,%d,%d,%d,%d', round(valores_envio), electroiman_estado);
                     writeline(puertoSerial, comando);
                     mostrar_comando(comando);
                 catch
                     mostrar_comando("Error al enviar datos a Arduino.");
-                end
             end
+end
+
         end
     end
 end

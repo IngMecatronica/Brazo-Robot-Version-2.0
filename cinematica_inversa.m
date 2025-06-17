@@ -37,6 +37,9 @@ function angulos_deg = cinematica_inversa(coords, phi, CODO, L1, L2, L3, L4, L5,
     q2 = alpha - beta;
 
     q4 = phi - q2 - q3;
+    %q4 = - (q2 - q3)+35;
+    %q4 = -(q2 - q3);
+    %q4 = phi - q2 - q3-35;
 
     angulos_rad = [q1 q2 q3 q4];
     angulos_deg = rad2deg(angulos_rad);
